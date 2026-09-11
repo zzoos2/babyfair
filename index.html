@@ -13,7 +13,7 @@
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* 인터랙티브 부스 타일 */
+    /* 인터랙티브 타일 */
     .booth-tile {
       position: absolute;
       cursor: pointer;
@@ -26,23 +26,23 @@
     
     /* 검색 및 필터 시 활성화 타일 */
     .booth-tile.active-booth {
-      background: rgba(124, 58, 237, 0.25) !important;
-      border: 2.5px solid #7c3aed !important;
+      background: rgba(124, 58, 237, 0.22) !important;
+      border: 3px solid #7c3aed !important;
       box-shadow: 0 0 12px rgba(124, 58, 237, 0.9) !important;
       z-index: 20;
     }
     .booth-tile.active-event {
-      background: rgba(225, 29, 72, 0.28) !important;
-      border: 2.5px solid #e11d48 !important;
+      background: rgba(225, 29, 72, 0.25) !important;
+      border: 3px solid #e11d48 !important;
       box-shadow: 0 0 14px rgba(225, 29, 72, 0.95) !important;
       z-index: 20;
     }
     
-    /* 비활성화 부스 암전 처리 (원본 지도에서 해당 부스만 가려짐) */
+    /* 비활성화 부스 암전 처리 (원본 도면에서 비선택 부스만 가려짐) */
     .booth-tile.dimmed {
       background: rgba(15, 23, 42, 0.72) !important;
       border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      opacity: 0.9 !important;
+      opacity: 0.92 !important;
     }
 
     .bottom-sheet-transition { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -184,7 +184,7 @@
     </div>
   </div>
 
-  <!-- 푸터 내비게이션 -->
+  <!-- 하단 탭 내비게이션 -->
   <footer class="absolute bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 py-2 px-3 shadow-lg pointer-events-auto">
     <div class="max-w-md mx-auto flex items-center justify-around">
       <button onclick="setFilter('all')" id="tab-all" class="flex flex-col items-center gap-0.5 text-slate-900 active:scale-95 transition">
@@ -214,149 +214,153 @@
   </div>
 
   <script>
+    /* =========================================================
+       도면 1:1 정밀 실측 좌표 데이터베이스 (2000 x 1150 원본 도면 기준)
+       ========================================================= */
     const BOOTHS = [
-      // H열 (상단 라인)
-      { id: "H100", name: "페르바도", x: 80, y: 65, w: 75, h: 62, cat: "출산용품", isGemini: false, items: ["영유아 스킨케어", "목욕용품", "로션"], event: null },
-      { id: "H102", name: "더미누", x: 155, y: 65, w: 75, h: 62, cat: "출산용품", isGemini: false, items: ["실내복", "내의"], event: null },
-      { id: "H104", name: "해님", x: 230, y: 65, w: 75, h: 62, cat: "가전·홈캠", isGemini: true, tip: "병원/조리원 유축기로 입소문 난 해님 살균기와 분유쉐이커.", items: ["유축기", "젖병소독기", "분유쉐이커"], event: null },
-      { id: "H106", name: "모윰/꿈비", x: 305, y: 65, w: 135, h: 62, cat: "출산·가전", isGemini: true, tip: "디자인 치발기·쪽쪽이 모윰 & 올인원 분유세척기 꿈비 부스.", items: ["젖병", "쪽쪽이", "치발기", "분유포트", "젖병세척기"], event: null },
-      { id: "H109", name: "버들", x: 460, y: 65, w: 80, h: 62, cat: "출산·가구", isGemini: false, items: ["육아 가전", "식기류", "가구"], event: { cond: "300명 인스타 팔로우, 스토리, 뽑기", desc: "치발기 증정" } },
-      { id: "H111", name: "쁘띠마리에", x: 540, y: 65, w: 80, h: 62, cat: "임산부용품", isGemini: false, items: ["임부속옷", "수유브라"], event: null },
-      { id: "H113", name: "아토앤오투", x: 620, y: 65, w: 85, h: 62, cat: "출산용품", isGemini: false, items: ["영유아 스킨케어", "크림"], event: null },
-      { id: "H116", name: "스칸디맘", x: 725, y: 65, w: 80, h: 62, cat: "출산용품", isGemini: true, tip: "신생아 모로반사 방지 스와들슈트 원단 확인 가능.", items: ["신생아의류", "침구", "속싸개", "스와들"], event: null },
-      { id: "H118", name: "쿠쿠", x: 805, y: 65, w: 125, h: 62, cat: "홈/리빙", isGemini: false, items: ["정수기", "가전"], event: null },
-      { id: "H122", name: "클리어잭", x: 950, y: 65, w: 75, h: 62, cat: "출산용품", isGemini: false, items: ["목욕용품", "샤워기", "수전필터"], event: null },
-      { id: "H124", name: "에르고베이비", x: 1025, y: 65, w: 80, h: 62, cat: "아기띠·턱받이", isGemini: true, tip: "M자 고관절 지지 글로벌 스테디셀러 아기띠.", items: ["옴니 브리즈", "아기띠", "힙시트"], event: null },
-      { id: "H126", name: "마더니아", x: 1105, y: 65, w: 70, h: 62, cat: "출산용품", isGemini: false, items: ["목욕용품", "욕조"], event: null },
-      { id: "H128", name: "한샘", x: 1175, y: 65, w: 105, h: 62, cat: "가구·매트", isGemini: true, tip: "국민 기저귀 정리함 '샘키즈 수납장' 실물 체감 및 할인.", items: ["영유아 침대", "가구", "매트", "샘키즈 수납함"], event: null },
-      { id: "H131", name: "밀리맘", x: 1300, y: 65, w: 70, h: 62, cat: "출산용품", isGemini: false, items: ["스킨케어", "기저귀가방"], event: null },
-      { id: "H133", name: "화음베베", x: 1370, y: 65, w: 85, h: 62, cat: "출산용품", isGemini: false, items: ["신생아의류", "침구", "배냇저고리"], event: null },
-      { id: "H136", name: "아띠에어", x: 1475, y: 65, w: 75, h: 62, cat: "아기띠·턱받이", isGemini: false, items: ["아기띠", "힙시트"], event: null },
-      { id: "H138", name: "르베베", x: 1550, y: 65, w: 75, h: 62, cat: "출산용품", isGemini: false, items: ["신생아의류", "기저귀", "수유쿠션"], event: null },
-      { id: "H140", name: "러빗", x: 1625, y: 65, w: 75, h: 62, cat: "출산·수유", isGemini: false, items: ["이유식기", "젖병", "빨대컵"], event: null },
-      { id: "H142", name: "퀸즈모아", x: 1700, y: 65, w: 75, h: 62, cat: "임산부용품", isGemini: false, items: ["산후마사지", "산후케어"], event: null },
+      // 1. 최상단 H열 (y: 62, h: 42)
+      { id: "H100", name: "페르바도", x: 80, y: 62, w: 84, h: 42, cat: "출산·수유", isGemini: false, items: ["영유아 스킨케어", "목욕용품"], event: null },
+      { id: "H102", name: "더미누", x: 164, y: 62, w: 72, h: 42, cat: "출산·수유", isGemini: false, items: ["실내복", "내의"], event: null },
+      { id: "H104", name: "해님", x: 236, y: 62, w: 80, h: 42, cat: "가전·홈캠", isGemini: true, tip: "병원/조리원 유축기로 입소문 난 살균기와 무소음 분유쉐이커.", items: ["유축기", "젖병소독기", "분유쉐이커"], event: null },
+      { id: "H106", name: "모윰/꿈비/누보몽드", x: 316, y: 62, w: 140, h: 42, cat: "출산·수유", isGemini: false, items: ["젖병", "쪽쪽이", "치발기", "분유포트", "젖병세척기"], event: null },
+      { id: "H109", name: "버들/버드베베", x: 456, y: 62, w: 80, h: 42, cat: "가구·침구", isGemini: false, items: ["육아 가전", "식기류", "가구"], event: { cond: "300명 인스타 팔로우, 스토리, 뽑기", desc: "치발기 증정" } },
+      { id: "H111", name: "쁘띠마리에", x: 536, y: 62, w: 80, h: 42, cat: "출산·수유", isGemini: false, items: ["임부속옷", "수유브라"], event: null },
+      { id: "H113", name: "아토앤오투", x: 616, y: 62, w: 104, h: 42, cat: "출산·수유", isGemini: false, items: ["영유아 스킨케어", "크림"], event: null },
+      { id: "H116", name: "스칸디맘 스와들", x: 720, y: 62, w: 84, h: 42, cat: "출산·수유", isGemini: false, items: ["신생아의류", "침구", "속싸개"], event: null },
+      { id: "H118", name: "쿠쿠", x: 804, y: 62, w: 154, h: 42, cat: "가전·홈캠", isGemini: false, items: ["정수기", "가전"], event: null },
+      { id: "H122", name: "클리어잭", x: 958, y: 62, w: 76, h: 42, cat: "출산·수유", isGemini: false, items: ["목욕용품", "샤워기", "수전필터"], event: null },
+      { id: "H124", name: "에르고베이비", x: 1034, y: 62, w: 80, h: 42, cat: "아기띠·턱받이", isGemini: true, tip: "M자 고관절 지지 권장 글로벌 스테디셀러 아기띠.", items: ["옴니 브리즈", "아기띠"], event: null },
+      { id: "H126", name: "마더니아/롤러러브", x: 1114, y: 62, w: 70, h: 42, cat: "출산·수유", isGemini: false, items: ["목욕용품", "욕조"], event: null },
+      { id: "H128", name: "한샘", x: 1184, y: 62, w: 116, h: 42, cat: "가구·침구", isGemini: false, items: ["영유아 침대", "가구", "매트", "샘키즈 수납함"], event: null },
+      { id: "H131", name: "밀리맘", x: 1300, y: 62, w: 68, h: 42, cat: "출산·수유", isGemini: false, items: ["스킨케어", "기저귀가방"], event: null },
+      { id: "H133", name: "화음베베", x: 1368, y: 62, w: 112, h: 42, cat: "출산·수유", isGemini: false, items: ["신생아의류", "침구", "배냇저고리"], event: null },
+      { id: "H136", name: "아띠에어", x: 1480, y: 62, w: 80, h: 42, cat: "아기띠·턱받이", isGemini: false, items: ["아기띠", "힙시트"], event: null },
+      { id: "H138", name: "르베베", x: 1560, y: 62, w: 68, h: 42, cat: "출산·수유", isGemini: false, items: ["신생아의류", "기저귀", "수유쿠션"], event: null },
+      { id: "H140", name: "러빗", x: 1628, y: 62, w: 62, h: 42, cat: "이유식·식품", isGemini: false, items: ["이유식기", "젖병", "빨대컵"], event: null },
+      { id: "H142", name: "퀸즈모아", x: 1690, y: 62, w: 68, h: 42, cat: "출산·수유", isGemini: false, items: ["산후마사지", "산후케어"], event: null },
 
-      // E열 (좌측 외벽)
-      { id: "E119", name: "에이더", x: 80, y: 145, w: 50, h: 65, cat: "임산부용품", isGemini: false, items: ["손목 보호대"], event: null },
-      { id: "E117", name: "숲소리", x: 80, y: 220, w: 50, h: 65, cat: "가구·침구", isGemini: false, items: ["영유아 침대", "원목가구", "교구"], event: null },
-      { id: "E115", name: "뽀뽀통", x: 80, y: 295, w: 50, h: 65, cat: "출산용품", isGemini: false, items: ["신생아의류", "배냇저고리"], event: null },
-      { id: "E113", name: "럽맘", x: 80, y: 370, w: 50, h: 65, cat: "출산육아 앱", isGemini: false, items: ["임산부/육아 서비스", "손수건"], event: { cond: "앱설치", desc: "가재수건 2개 증정" } },
-      { id: "E111", name: "마이필", x: 80, y: 445, w: 50, h: 65, cat: "임산부식품", isGemini: false, items: ["임산부 건강식품", "철분제"], event: null },
-      { id: "E109", name: "와이엠마마", x: 80, y: 520, w: 50, h: 65, cat: "아기띠·턱받이", isGemini: false, items: ["기저귀가방", "턱받이"], event: null },
-      { id: "E107", name: "아가똥", x: 80, y: 595, w: 50, h: 65, cat: "출산용품", isGemini: false, items: ["배가리개", "출산준비물"], event: null },
-      { id: "E105", name: "눈부신일상", x: 80, y: 670, w: 50, h: 65, cat: "스튜디오", isGemini: false, items: ["성장앨범", "만삭촬영"], event: null },
-      { id: "E103", name: "나투라비타", x: 80, y: 745, w: 50, h: 65, cat: "임산부용품", isGemini: false, items: ["튼살크림", "오일"], event: null },
-      { id: "E100", name: "비세이프", x: 80, y: 820, w: 50, h: 65, cat: "유모차·카시트", isGemini: false, items: ["안전 카시트", "바구니카시트"], event: null },
+      // 2. 좌측 E열 (x: 80, w: 48, h: 68)
+      { id: "E119", name: "에이더", x: 80, y: 114, w: 48, h: 68, cat: "출산·수유", isGemini: false, items: ["손목 보호대"], event: null },
+      { id: "E117", name: "숲소리", x: 80, y: 184, w: 48, h: 68, cat: "가구·침구", isGemini: false, items: ["영유아 침대", "원목가구", "교구"], event: null },
+      { id: "E115", name: "뽀뽀통", x: 80, y: 254, w: 48, h: 68, cat: "출산·수유", isGemini: false, items: ["신생아의류", "배냇저고리"], event: null },
+      { id: "E113", name: "럽맘", x: 80, y: 324, w: 48, h: 68, cat: "출산·수유", isGemini: false, items: ["임산부/육아 서비스", "손수건"], event: { cond: "앱설치", desc: "가재수건 2개 증정" } },
+      { id: "E111", name: "마이필", x: 80, y: 394, w: 48, h: 68, cat: "이유식·식품", isGemini: false, items: ["임산부 건강식품", "철분제"], event: null },
+      { id: "E109", name: "와이엠마마", x: 80, y: 464, w: 48, h: 68, cat: "아기띠·턱받이", isGemini: false, items: ["기저귀가방", "턱받이"], event: null },
+      { id: "E107", name: "아가똥", x: 80, y: 534, w: 48, h: 68, cat: "출산·수유", isGemini: false, items: ["배가리개", "출산준비물"], event: null },
+      { id: "E105", name: "눈부신일상", x: 80, y: 604, w: 48, h: 68, cat: "출산·수유", isGemini: false, items: ["성장앨범", "만삭촬영"], event: null },
+      { id: "E103", name: "나투라비타", x: 80, y: 674, w: 48, h: 68, cat: "출산·수유", isGemini: false, items: ["튼살크림", "오일"], event: null },
+      { id: "E100", name: "비세이프", x: 80, y: 744, w: 48, h: 68, cat: "유모차·카시트", isGemini: false, items: ["안전 카시트", "바구니카시트"], event: null },
 
-      // A열 (우측 외벽)
-      { id: "A120", name: "네띠", x: 1870, y: 145, w: 55, h: 65, cat: "출산용품", isGemini: false, items: ["친환경 기저귀"], event: { cond: "부스 방문", desc: "기저귀 샘플 증정" } },
-      { id: "A118", name: "디어랑쥬", x: 1870, y: 220, w: 55, h: 65, cat: "출산용품", isGemini: false, items: ["쪽쪽이 클립", "치발기"], event: null },
-      { id: "A116", name: "육아원칙", x: 1870, y: 295, w: 55, h: 65, cat: "가전·홈캠", isGemini: false, items: ["젖병세척기"], event: null },
-      { id: "A115", name: "봄치키", x: 1870, y: 370, w: 55, h: 65, cat: "출산용품", isGemini: false, items: ["유아세제", "미니빨래판"], event: { cond: "네이버스토어 알림받기", desc: "애벌용 미니 빨래판 증정" } },
-      { id: "A113", name: "맘스데이", x: 1870, y: 445, w: 55, h: 65, cat: "임산부용품", isGemini: false, items: ["임부속옷", "수유나시"], event: null },
-      { id: "A111", name: "꼬까신", x: 1870, y: 520, w: 55, h: 65, cat: "출산용품", isGemini: false, items: ["신생아의류", "침구"], event: null },
-      { id: "A109", name: "소중한습관", x: 1870, y: 595, w: 55, h: 65, cat: "출산용품", isGemini: false, items: ["스킨케어", "물티슈"], event: { cond: "인스타 팔로우, 스토리, 네이버스토어알림", desc: "랜덤선물 증정" } },
-      { id: "A107", name: "루솔", x: 1870, y: 670, w: 55, h: 65, cat: "이유식·식품", isGemini: false, items: ["이유식", "간식", "아기과자"], event: null },
-      { id: "A103", name: "베베시아", x: 1870, y: 745, w: 55, h: 65, cat: "홈/리빙", isGemini: false, items: ["샤워필터", "아기비데 수전"], event: null },
-      { id: "A100", name: "헤겐", x: 1870, y: 820, w: 55, h: 65, cat: "출산·수유", isGemini: true, tip: "배앓이 방지 밸브와 이유식 보관 호환 국민 젖병.", items: ["배앓이 젖병", "수유용품", "이유식기"], event: null },
+      // 3. 우측 A열 (x: 1870, w: 50, h: 68)
+      { id: "A120", name: "네띠", x: 1870, y: 114, w: 50, h: 68, cat: "출산·수유", isGemini: false, items: ["친환경 기저귀"], event: { cond: "부스 방문", desc: "기저귀 샘플 증정" } },
+      { id: "A118", name: "디어랑쥬", x: 1870, y: 184, w: 50, h: 68, cat: "출산·수유", isGemini: false, items: ["쪽쪽이 클립", "치발기"], event: null },
+      { id: "A116", name: "육아원칙", x: 1870, y: 254, w: 50, h: 68, cat: "가전·홈캠", isGemini: false, items: ["젖병세척기"], event: null },
+      { id: "A115", name: "봄치키", x: 1870, y: 324, w: 50, h: 68, cat: "출산·수유", isGemini: false, items: ["유아세제", "미니빨래판"], event: { cond: "네이버스토어 알림받기", desc: "애벌용 미니 빨래판 증정" } },
+      { id: "A113", name: "맘스데이", x: 1870, y: 394, w: 50, h: 68, cat: "출산·수유", isGemini: false, items: ["임부속옷", "수유나시"], event: null },
+      { id: "A111", name: "꼬까신", x: 1870, y: 464, w: 50, h: 68, cat: "출산·수유", isGemini: false, items: ["신생아의류", "침구"], event: null },
+      { id: "A109", name: "소중한습관", x: 1870, y: 534, w: 50, h: 68, cat: "출산·수유", isGemini: false, items: ["스킨케어", "물티슈"], event: { cond: "인스타 팔로우, 스토리, 네이버스토어알림", desc: "랜덤선물 증정" } },
+      { id: "A107", name: "루솔", x: 1870, y: 604, w: 50, h: 68, cat: "이유식·식품", isGemini: false, items: ["이유식", "간식", "아기과자"], event: null },
+      { id: "A103", name: "베베시아", x: 1870, y: 674, w: 50, h: 68, cat: "출산·수유", isGemini: false, items: ["샤워필터", "아기비데 수전"], event: null },
+      { id: "A100", name: "헤겐", x: 1870, y: 744, w: 50, h: 68, cat: "출산·수유", isGemini: true, tip: "배앓이 방지 밸브와 이유식 보관 호환 국민 젖병.", items: ["배앓이 젖병", "수유용품", "이유식기"], event: null },
 
-      // 내부 1행
-      { id: "D370", name: "브람스", x: 165, y: 155, w: 75, h: 90, cat: "가구·매트", isGemini: true, tip: "고밀도 안심 TPU 우레탄 폼 시공매트.", items: ["층간소음 시공매트", "매트"], event: null },
-      { id: "D375", name: "포그내/타이니", x: 240, y: 155, w: 80, h: 90, cat: "아기띠·턱받이", isGemini: true, tip: "올인원 힙시트 & 신생아 시각 자극 국민 모빌.", items: ["올인원 힙시트", "아기띠", "국민 모빌"], event: null },
-      { id: "D270", name: "코지스토리", x: 360, y: 155, w: 120, h: 90, cat: "가구·매트", isGemini: false, items: ["영유아침대", "기저귀갈이대", "하이체어"], event: null },
-      { id: "D180", name: "허그파파", x: 520, y: 155, w: 125, h: 90, cat: "아기띠·턱받이", isGemini: true, tip: "보아 다이얼 체결 편리한 아기띠.", items: ["다이얼 아기띠", "아기띠", "쿨시트"], event: null },
-      { id: "D170", name: "밤부베베", x: 675, y: 155, w: 130, h: 90, cat: "출산·수유", isGemini: true, tip: "거즈/엠보 손수건 및 밤부 대나무 천기저귀 1순위 코스.", items: ["거즈 손수건", "엠보 손수건", "천기저귀", "손수건"], event: null },
-      { id: "C270", name: "Oneteam", x: 835, y: 155, w: 120, h: 90, cat: "출산육아 서비스", isGemini: false, items: ["타포린백", "미니에코백"], event: { cond: "뽑기이벤트", desc: "타포린백 / 미니에코백 증정" } },
-      { id: "C170", name: "미엔엄마", x: 995, y: 155, w: 75, h: 90, cat: "임산부/육아 서비스", isGemini: false, items: ["산후마사지"], event: null },
-      { id: "C175", name: "다인맘스케어", x: 1070, y: 155, w: 95, h: 90, cat: "임산부/육아 서비스", isGemini: false, items: ["산후마사지"], event: null },
-      { id: "B270", name: "알집매트", x: 1215, y: 155, w: 160, h: 90, cat: "가구·매트", isGemini: true, tip: "층간소음 방지 매트 원조. 롤매트 및 베이비룸.", items: ["폴더매트", "롤매트", "베이비룸", "매트"], event: { cond: "30명, 인스타게시물 댓글달고 선착쿠폰", desc: "매트 클리너 증정" } },
-      { id: "B170", name: "유팡", x: 1425, y: 155, w: 80, h: 90, cat: "가전·홈캠", isGemini: true, tip: "국내 1위 3D 입체 살균 젖병소독기.", items: ["젖병 자외선 소독기", "소독기"], event: null },
-      { id: "B175", name: "수야무", x: 1505, y: 155, w: 75, h: 90, cat: "출산용품", isGemini: false, items: ["영유아 스킨케어", "로션"], event: { cond: "플친, 핀볼게임", desc: "샘플 증정" } },
-      { id: "A270", name: "베이비브레짜", x: 1625, y: 155, w: 95, h: 90, cat: "가전·홈캠", isGemini: true, tip: "7초 만에 정량 분유를 자동 조제하는 육아필수템.", items: ["자동 분유제조기", "젖병세척기"], event: null },
-      { id: "A275", name: "루브", x: 1720, y: 155, w: 95, h: 90, cat: "출산용품", isGemini: false, items: ["영유아의류", "스킨케어"], event: null },
+      // 4. 내부 1행 (y: 125, h: 72)
+      { id: "D370", name: "브람스", x: 165, y: 125, w: 60, h: 72, cat: "가구·침구", isGemini: false, items: ["층간소음 시공매트", "매트"], event: null },
+      { id: "D375", name: "포그내/타이니러브", x: 235, y: 125, w: 85, h: 72, cat: "아기띠·턱받이", isGemini: true, tip: "올인원 힙시트 & 신생아 시각 자극 국민 모빌.", items: ["올인원 힙시트", "아기띠", "국민 모빌"], event: null },
+      { id: "D270", name: "코지스토리", x: 365, y: 125, w: 120, h: 72, cat: "가구·침구", isGemini: false, items: ["영유아침대", "기저귀갈이대", "하이체어"], event: null },
+      { id: "D180", name: "허그파파", x: 525, y: 125, w: 125, h: 72, cat: "아기띠·턱받이", isGemini: true, tip: "보아 다이얼 체결 편리한 아기띠.", items: ["다이얼 아기띠", "아기띠", "쿨시트"], event: null },
+      { id: "D170", name: "밤부베베", x: 685, y: 125, w: 130, h: 72, cat: "출산·수유", isGemini: true, tip: "거즈/엠보 손수건 및 밤부 대나무 천기저귀 1순위 코스.", items: ["거즈 손수건", "엠보 손수건", "천기저귀", "손수건"], event: null },
+      { id: "C270", name: "Oneteam", x: 840, y: 125, w: 120, h: 72, cat: "출산·수유", isGemini: false, items: ["타포린백", "미니에코백"], event: { cond: "뽑기이벤트", desc: "타포린백 / 미니에코백 증정" } },
+      { id: "C170", name: "미엔엄마", x: 1000, y: 125, w: 75, h: 72, cat: "출산·수유", isGemini: false, items: ["산후마사지"], event: null },
+      { id: "C175", name: "다인맘스케어", x: 1080, y: 125, w: 120, h: 72, cat: "출산·수유", isGemini: false, items: ["산후마사지"], event: null },
+      { id: "B270", name: "알집매트", x: 1245, y: 125, w: 155, h: 72, cat: "가구·침구", isGemini: false, items: ["폴더매트", "롤매트", "베이비룸", "매트"], event: { cond: "30명, 인스타게시물 댓글달고 선착쿠폰", desc: "매트 클리너 증정" } },
+      { id: "B170", name: "유팡", x: 1450, y: 125, w: 75, h: 72, cat: "가전·홈캠", isGemini: true, tip: "국내 1위 3D 입체 살균 젖병소독기.", items: ["젖병 자외선 소독기", "소독기"], event: null },
+      { id: "B175", name: "수야무", x: 1530, y: 125, w: 80, h: 72, cat: "출산·수유", isGemini: false, items: ["영유아 스킨케어", "로션"], event: { cond: "플친, 핀볼게임", desc: "샘플 증정" } },
+      { id: "A270", name: "베이비브레짜", x: 1650, y: 125, w: 85, h: 72, cat: "가전·홈캠", isGemini: true, tip: "7초 만에 정량 분유를 자동 조제하는 육아필수템.", items: ["자동 분유제조기", "젖병세척기"], event: null },
+      { id: "A275", name: "루브", x: 1740, y: 125, w: 90, h: 72, cat: "출산·수유", isGemini: false, items: ["영유아의류", "스킨케어"], event: null },
 
-      // 내부 2행 & 중간열
-      { id: "D360", name: "코웨이", x: 165, y: 280, w: 75, h: 75, cat: "홈/리빙", isGemini: false, items: ["정수기", "공기청정기"], event: null },
-      { id: "D366", name: "닥터맘스", x: 240, y: 280, w: 80, h: 75, cat: "출산용품", isGemini: false, items: ["수유쿠션", "신생아의류"], event: null },
-      { id: "D260", name: "아노지요", x: 400, y: 255, w: 60, h: 105, cat: "가구·매트", isGemini: false, items: ["TPU 시공매트", "매트"], event: null },
-      { id: "D266", name: "코트앤크래들", x: 465, y: 255, w: 80, h: 50, cat: "출산용품", isGemini: false, items: ["신생아의류"], event: null },
-      { id: "D264", name: "헤이홈", x: 465, y: 310, w: 80, h: 50, cat: "가전·홈캠", isGemini: true, tip: "분리수면 필수 고화질 야간 홈캠.", items: ["스마트 홈캠", "베이비캠"], event: { cond: "부스 방문 뽑기", desc: "뽑기이벤트" } },
-      { id: "D165", name: "해브어썸", x: 550, y: 255, w: 45, h: 50, cat: "출산용품", isGemini: false, items: ["신생아의류", "티셔츠"], event: { cond: "팔로우, 사진업로드", desc: "티셔츠 증정" } },
-      { id: "D164", name: "아르떼베베", x: 595, y: 255, w: 45, h: 50, cat: "출산용품", isGemini: false, items: ["위생용품"], event: null },
-      { id: "D163", name: "트위니슈슈", x: 640, y: 255, w: 45, h: 50, cat: "출산용품", isGemini: false, items: ["신생아의류"], event: null },
-      { id: "D160", name: "제로웰", x: 550, y: 310, w: 45, h: 50, cat: "가전·홈캠", isGemini: false, items: ["공기청정기", "가습기"], event: null },
-      { id: "D161", name: "핀덴", x: 595, y: 310, w: 45, h: 50, cat: "교육·놀이", isGemini: false, items: ["지능개발 도서", "교구"], event: null },
-      { id: "D162", name: "도트온", x: 640, y: 310, w: 45, h: 50, cat: "홈/리빙", isGemini: false, items: ["인테리어 제품"], event: null },
+      // 5. 내부 2행 (y: 220, h: 68)
+      { id: "D360", name: "코웨이", x: 165, y: 220, w: 75, h: 68, cat: "가전·홈캠", isGemini: false, items: ["정수기", "공기청정기"], event: null },
+      { id: "D366", name: "닥터맘스", x: 245, y: 220, w: 75, h: 68, cat: "출산·수유", isGemini: false, items: ["수유쿠션", "신생아의류"], event: null },
+      // 민트 박스 내부
+      { id: "D260", name: "아노지요", x: 395, y: 215, w: 65, h: 105, cat: "가구·침구", isGemini: false, items: ["TPU 시공매트", "매트"], event: null },
+      { id: "D266", name: "코트앤크래들", x: 465, y: 215, w: 85, h: 50, cat: "출산·수유", isGemini: false, items: ["신생아의류"], event: null },
+      { id: "D264", name: "헤이홈", x: 465, y: 270, w: 85, h: 50, cat: "가전·홈캠", isGemini: true, tip: "분리수면 필수 고화질 야간 홈캠.", items: ["스마트 홈캠", "베이비캠"], event: { cond: "부스 방문 뽑기", desc: "뽑기이벤트" } },
+      { id: "D165", name: "해브어썸", x: 555, y: 215, w: 45, h: 50, cat: "출산·수유", isGemini: false, items: ["신생아의류", "티셔츠"], event: { cond: "팔로우, 사진업로드", desc: "티셔츠 증정" } },
+      { id: "D164", name: "아르떼베베", x: 605, y: 215, w: 45, h: 50, cat: "출산·수유", isGemini: false, items: ["위생용품"], event: null },
+      { id: "D163", name: "트위니슈슈", x: 655, y: 215, w: 45, h: 50, cat: "출산·수유", isGemini: false, items: ["신생아의류"], event: null },
+      { id: "D160", name: "제로웰", x: 555, y: 270, w: 45, h: 50, cat: "가전·홈캠", isGemini: false, items: ["공기청정기", "가습기"], event: null },
+      { id: "D161", name: "핀덴", x: 605, y: 270, w: 45, h: 50, cat: "가구·침구", isGemini: false, items: ["지능개발 도서", "교구"], event: null },
+      { id: "D162", name: "도트온", x: 655, y: 270, w: 45, h: 50, cat: "가구·침구", isGemini: false, items: ["인테리어 제품"], event: null },
 
       // 중앙 대형 부스
-      { id: "C250", name: "압타밀", x: 745, y: 265, w: 215, h: 185, cat: "출산·수유", isGemini: true, tip: "독일 프리미엄 조제분유. 압타클럽 웰컴 기프트 현장 수령.", items: ["독일 프리미엄 조제분유", "분유"], event: { cond: "선가입 + 카톡플친", desc: "선착순 1만명 프리미엄 기프트 세트(6만원 상당)" } },
-      { id: "C163", name: "서울시여성", x: 995, y: 255, w: 80, h: 45, cat: "출산육아 서비스", isGemini: false, items: ["육아 정책안내"], event: null },
-      { id: "C165", name: "그레이트", x: 1075, y: 255, w: 55, h: 45, cat: "교육·놀이", isGemini: false, items: ["유아도서", "전집"], event: null },
-      { id: "C166", name: "끄리나", x: 1130, y: 255, w: 55, h: 45, cat: "출산용품", isGemini: false, items: ["스킨케어"], event: null },
-      { id: "C160", name: "코니", x: 995, y: 320, w: 190, h: 130, cat: "아기띠·턱받이", isGemini: true, tip: "슬링 아기띠와 국민 롤링 턱받이.", items: ["슬링 아기띠", "아기띠", "롤링 턱받이", "턱받이"], event: { cond: "홈페이지가입, 플친", desc: "턱받이 증정" } },
+      { id: "C250", name: "압타밀", x: 745, y: 220, w: 220, h: 140, cat: "출산·수유", isGemini: false, items: ["독일 프리미엄 조제분유", "분유"], event: { cond: "선가입 + 카톡플친", desc: "선착순 1만명 프리미엄 기프트 세트(6만원 상당)" } },
+      { id: "C163", name: "서울시여성가족재단", x: 1000, y: 220, w: 80, h: 42, cat: "출산·수유", isGemini: false, items: ["육아 정책안내"], event: null },
+      { id: "C165", name: "그레이트북스", x: 1085, y: 220, w: 55, h: 42, cat: "가구·침구", isGemini: false, items: ["유아도서", "전집"], event: null },
+      { id: "C166", name: "끄리나", x: 1145, y: 220, w: 55, h: 42, cat: "출산·수유", isGemini: false, items: ["스킨케어"], event: null },
+      { id: "C160", name: "코니", x: 1000, y: 275, w: 200, h: 115, cat: "아기띠·턱받이", isGemini: true, tip: "슬링 아기띠와 국민 롤링 턱받이.", items: ["슬링 아기띠", "아기띠", "롤링 턱받이", "턱받이"], event: { cond: "홈페이지가입, 플친", desc: "턱받이 증정" } },
 
       // D구역 중간 부스열
-      { id: "D350", name: "쁘띠라뺑", x: 165, y: 365, w: 105, h: 70, cat: "가구·매트", isGemini: true, tip: "원목 아기침대와 범퍼침대 국민 브랜드.", items: ["원목 침대", "가구", "범퍼침대"], event: null },
-      { id: "D356", name: "마베비", x: 270, y: 365, w: 50, h: 70, cat: "출산·수유", isGemini: false, items: ["위생용품", "분유저장팩"], event: { cond: "부스 방문", desc: "휴대용 분유 저장팩 증정" } },
-      { id: "D250", name: "니스툴그로우", x: 375, y: 365, w: 105, h: 70, cat: "가구·매트", isGemini: false, items: ["영유아 침대", "기저귀정리함"], event: { cond: "50명, 인스타업로드", desc: "기저귀 정리함 증정" } },
-      { id: "D256", name: "피카비", x: 480, y: 365, w: 50, h: 70, cat: "교육·놀이", isGemini: false, items: ["몬테소리 교구", "초점카드"], event: { cond: "플친, 스토어알림, 인스타팔로우", desc: "초점카드 + 성장캘린더 증정" } },
-      { id: "D150", name: "이슬로", x: 555, y: 365, w: 50, h: 70, cat: "출산용품", isGemini: false, items: ["스킨케어", "로션"], event: { cond: "뽑기 이벤트", desc: "샘플 증정" } },
-      { id: "D155", name: "뢰벤짠", x: 605, y: 365, w: 85, h: 70, cat: "출산·수유", isGemini: false, items: ["유기농 분유"], event: null },
+      { id: "D350", name: "쁘띠라뺑", x: 165, y: 310, w: 115, h: 72, cat: "가구·침구", isGemini: false, items: ["원목 침대", "가구", "범퍼침대"], event: null },
+      { id: "D356", name: "마베비", x: 285, y: 310, w: 45, h: 72, cat: "출산·수유", isGemini: false, items: ["위생용품", "분유저장팩"], event: { cond: "부스 방문", desc: "휴대용 분유 저장팩 증정" } },
+      { id: "D250", name: "니스툴그로우", x: 375, y: 325, w: 120, h: 72, cat: "가구·침구", isGemini: false, items: ["영유아 침대", "기저귀정리함"], event: { cond: "50명, 인스타업로드", desc: "기저귀 정리함 증정" } },
+      { id: "D256", name: "피카비", x: 500, y: 325, w: 45, h: 72, cat: "가구·침구", isGemini: false, items: ["몬테소리 교구", "초점카드"], event: { cond: "플친, 스토어알림, 인스타팔로우", desc: "초점카드 + 성장캘린더 증정" } },
+      { id: "D150", name: "이슬로", x: 575, y: 325, w: 50, h: 72, cat: "출산·수유", isGemini: false, items: ["스킨케어", "로션"], event: { cond: "뽑기 이벤트", desc: "샘플 증정" } },
+      { id: "D155", name: "뢰벤짠", x: 630, y: 325, w: 75, h: 72, cat: "출산·수유", isGemini: false, items: ["유기농 분유"], event: null },
 
       // 노란색 교육/푸드 박스 내부
-      { id: "B260", name: "프뢰벨", x: 1255, y: 280, w: 75, h: 70, cat: "교육·놀이", isGemini: false, items: ["영유아 도서", "은물"], event: null },
-      { id: "B266", name: "잉글리시에그", x: 1330, y: 280, w: 75, h: 70, cat: "교육·놀이", isGemini: false, items: ["영어 교육", "키즈에이원"], event: null },
-      { id: "B250", name: "슈퍼보리", x: 1255, y: 355, w: 75, h: 80, cat: "이유식·식품", isGemini: false, items: ["아기보리차", "고형차"], event: null },
-      { id: "B255", name: "릴리브", x: 1330, y: 355, w: 75, h: 80, cat: "가전·홈캠", isGemini: true, tip: "원터치 정량 자동 출수 국민 분유포트.", items: ["자동출수 분유포트", "분유포트"], event: { cond: "인스타팔로우, 설문, 뽑기", desc: "뽑기 이벤트 참여" } },
-      { id: "B166", name: "아임낫어베이비", x: 1420, y: 280, w: 95, h: 70, cat: "출산용품", isGemini: false, items: ["스킨케어", "바바북스"], event: null },
-      { id: "B165", name: "방방", x: 1515, y: 280, w: 100, h: 70, cat: "이유식·식품", isGemini: false, items: ["유아식기", "스낵"], event: null },
-      { id: "B150", name: "질리맥스", x: 1420, y: 355, w: 95, h: 80, cat: "이유식·식품", isGemini: false, items: ["자일리톨", "루트킨디 이유식"], event: null },
-      { id: "B152", name: "아가애", x: 1515, y: 355, w: 100, h: 80, cat: "이유식·식품", isGemini: false, items: ["간식", "한동키즈 영양제"], event: null },
+      { id: "B260", name: "프뢰벨", x: 1250, y: 220, w: 80, h: 68, cat: "가구·침구", isGemini: false, items: ["영유아 도서", "은물"], event: null },
+      { id: "B266", name: "잉글리시에그/키즈에이원", x: 1335, y: 220, w: 80, h: 68, cat: "가구·침구", isGemini: false, items: ["영어 교육", "키즈에이원"], event: null },
+      { id: "B250", name: "슈퍼보리", x: 1250, y: 315, w: 80, h: 72, cat: "이유식·식품", isGemini: false, items: ["아기보리차", "고형차"], event: null },
+      { id: "B255", name: "릴리브", x: 1335, y: 315, w: 80, h: 72, cat: "가전·홈캠", isGemini: true, tip: "원터치 정량 자동 출수 국민 분유포트.", items: ["자동출수 분유포트", "분유포트"], event: { cond: "인스타팔로우, 설문, 뽑기", desc: "뽑기 이벤트 참여" } },
+      { id: "B166", name: "아임낫어베이비/바바북스", x: 1455, y: 220, w: 80, h: 68, cat: "출산·수유", isGemini: false, items: ["스킨케어", "바바북스"], event: null },
+      { id: "B165", name: "방방", x: 1540, y: 220, w: 80, h: 68, cat: "이유식·식품", isGemini: false, items: ["유아식기", "스낵"], event: null },
+      { id: "B150", name: "질리맥스/루트킨디", x: 1455, y: 315, w: 80, h: 72, cat: "이유식·식품", isGemini: false, items: ["자일리톨", "루트킨디 이유식"], event: null },
+      { id: "B152", name: "아가애/한동키즈", x: 1540, y: 315, w: 80, h: 72, cat: "이유식·식품", isGemini: false, items: ["간식", "한동키즈 영양제"], event: null },
 
       // A열 중간 부스
-      { id: "A266", name: "유니바바", x: 1625, y: 270, w: 95, h: 80, cat: "출산용품", isGemini: false, items: ["스킨케어", "리캔 휴지통"], event: { cond: "부스 방문", desc: "샘플 증정" } },
-      { id: "A265", name: "픽셀", x: 1720, y: 270, w: 95, h: 80, cat: "가전·홈캠", isGemini: false, items: ["젖병소독기"], event: null },
-      { id: "A250", name: "롤로리아", x: 1625, y: 360, w: 95, h: 80, cat: "가구·매트", isGemini: false, items: ["롤매트", "매트"], event: null },
-      { id: "A255", name: "차바이오텍", x: 1720, y: 360, w: 95, h: 80, cat: "임산부/육아 서비스", isGemini: false, items: ["제대혈 보관"], event: null },
+      { id: "A266", name: "유니바바/리캔", x: 1650, y: 220, w: 85, h: 68, cat: "출산·수유", isGemini: false, items: ["스킨케어", "리캔 휴지통"], event: { cond: "부스 방문", desc: "샘플 증정" } },
+      { id: "A265", name: "픽셀/모아트리", x: 1740, y: 220, w: 90, h: 68, cat: "가전·홈캠", isGemini: false, items: ["젖병소독기"], event: null },
+      { id: "A250", name: "롤로리아", x: 1650, y: 315, w: 85, h: 72, cat: "가구·침구", isGemini: false, items: ["롤매트", "매트"], event: null },
+      { id: "A255", name: "차바이오텍", x: 1740, y: 315, w: 90, h: 72, cat: "출산·수유", isGemini: false, items: ["제대혈 보관"], event: null },
 
-      // 6. 내부 3행 (테마스트릿)
-      { id: "D340", name: "카라즈", x: 175, y: 455, w: 75, h: 90, cat: "가구·매트", isGemini: true, tip: "가성비와 내구성 우수한 거실 폴더매트.", items: ["폴더매트", "베이비룸", "매트"], event: null },
-      { id: "D346", name: "온프르/쓴쓰백", x: 250, y: 455, w: 70, h: 90, cat: "홈/리빙", isGemini: false, items: ["기저귀 냄새차단봉투"], event: null },
-      { id: "D240", name: "처음매트", x: 375, y: 455, w: 75, h: 90, cat: "가구·매트", isGemini: false, items: ["TPU 시공매트", "매트"], event: null },
-      { id: "D245", name: "웅진북클럽", x: 450, y: 455, w: 70, h: 90, cat: "교육·놀이", isGemini: false, items: ["영유아 도서", "전집"], event: null },
-      { id: "D146", name: "안데르센", x: 570, y: 455, w: 65, h: 42, cat: "가구·매트", isGemini: false, items: ["유아가구", "아기침대"], event: null },
-      { id: "D140", name: "밤비데", x: 570, y: 502, w: 65, h: 43, cat: "출산용품", isGemini: true, tip: "세면대에서 아기 엉덩이 씻기는 필수 목욕템.", items: ["목욕비데", "세면대비데", "손수건"], event: { cond: "1일 100개 한정", desc: "잘라코 손수건 증정" } },
-      { id: "D145", name: "파크론 제로블럭", x: 645, y: 455, w: 75, h: 90, cat: "가구·매트", isGemini: true, tip: "거실 틈새 밀착 TPU 시공매트 대표 브랜드.", items: ["TPU 시공매트", "매트"], event: null },
-      { id: "C240", name: "마더케이", x: 785, y: 455, w: 165, h: 90, cat: "출산·수유", isGemini: true, tip: "모유/분유 저장팩, 아기 지퍼백, 젖병 세제.", items: ["젖병", "모유저장팩", "분유저장팩", "아기 지퍼백", "물티슈", "세제"], event: { cond: "공식몰가입, 인스타팔로우", desc: "물티슈 or 세제 증정" } },
-      { id: "C140", name: "엔퍼센트", x: 985, y: 455, w: 100, h: 90, cat: "가전·홈캠", isGemini: false, items: ["가습기", "온습도계"], event: { cond: "뽑기이벤트", desc: "순위별 사은품 증정" } },
-      { id: "C145", name: "TGM", x: 1085, y: 455, w: 100, h: 90, cat: "출산·이유식", isGemini: true, tip: "실리콘 이유식기와 건조대 등 감성 육아식기.", items: ["이유식기", "실리콘 식판", "흡착볼", "스푼포크"], event: null },
-      { id: "B240", name: "아이콩콩", x: 1250, y: 455, w: 85, h: 90, cat: "가구·매트", isGemini: false, items: ["시공매트", "폴더매트", "매트"], event: null },
-      { id: "B245", name: "셀트리", x: 1335, y: 455, w: 80, h: 90, cat: "임산부/육아 서비스", isGemini: false, items: ["제대혈 보관"], event: null },
-      { id: "B140", name: "카페 코빈즈/비오비타", x: 1455, y: 455, w: 160, h: 90, cat: "이유식·식품", isGemini: false, items: ["디카페인 커피", "유산균", "간식"], event: null },
-      { id: "A240", name: "튼튼영어", x: 1625, y: 455, w: 75, h: 90, cat: "교육·놀이", isGemini: false, items: ["외국어교육", "영어전집"], event: null },
-      { id: "A245", name: "아이엔젤", x: 1700, y: 455, w: 80, h: 90, cat: "아기띠·턱받이", isGemini: false, items: ["아기띠", "힙시트"], event: null },
+      // 6. 내부 3행 (테마스트릿 라인 y: 405, h: 78)
+      { id: "D340", name: "카라즈", x: 165, y: 405, w: 75, h: 78, cat: "가구·침구", isGemini: false, items: ["폴더매트", "베이비룸", "매트"], event: null },
+      { id: "D346", name: "온프르/쓴쓰백/치키몽키", x: 245, y: 405, w: 75, h: 78, cat: "출산·수유", isGemini: false, items: ["기저귀 냄새차단봉투"], event: null },
+      { id: "D240", name: "처음매트", x: 375, y: 405, w: 80, h: 78, cat: "가구·침구", isGemini: false, items: ["TPU 시공매트", "매트"], event: null },
+      { id: "D245", name: "웅진북클럽", x: 460, y: 405, w: 75, h: 78, cat: "가구·침구", isGemini: false, items: ["영유아 도서", "전집"], event: null },
+      { id: "D146", name: "안데르센", x: 575, y: 405, w: 75, h: 36, cat: "가구·침구", isGemini: false, items: ["유아가구", "아기침대"], event: null },
+      { id: "D140", name: "밤비데", x: 575, y: 445, w: 75, h: 38, cat: "출산·수유", isGemini: false, items: ["목욕비데", "세면대비데", "손수건"], event: { cond: "1일 100개 한정", desc: "잘라코 손수건 증정" } },
+      { id: "D145", name: "파크론 제로블럭", x: 655, y: 405, w: 80, h: 78, cat: "가구·침구", isGemini: false, items: ["TPU 시공매트", "매트"], event: null },
+      { id: "C240", name: "마더케이", x: 785, y: 405, w: 180, h: 78, cat: "출산·수유", isGemini: false, items: ["젖병", "모유저장팩", "분유저장팩", "아기 지퍼백", "물티슈", "세제"], event: { cond: "공식몰가입, 인스타팔로우", desc: "물티슈 or 세제 증정" } },
+      { id: "C140", name: "엔퍼센트", x: 1000, y: 405, w: 90, h: 78, cat: "가전·홈캠", isGemini: false, items: ["가습기", "온습도계"], event: { cond: "뽑기이벤트", desc: "순위별 사은품 증정" } },
+      { id: "C145", name: "TGM", x: 1095, y: 405, w: 90, h: 78, cat: "이유식·식품", isGemini: true, tip: "실리콘 이유식기와 건조대 등 감성 육아식기.", items: ["이유식기", "실리콘 식판", "흡착볼", "스푼포크"], event: null },
+      { id: "B240", name: "아이콩콩", x: 1245, y: 405, w: 85, h: 78, cat: "가구·침구", isGemini: false, items: ["시공매트", "폴더매트", "매트"], event: null },
+      { id: "B245", name: "셀트리", x: 1335, y: 405, w: 85, h: 78, cat: "출산·수유", isGemini: false, items: ["제대혈 보관"], event: null },
+      { id: "B140", name: "카페 코빈즈/비오비타/또또맘", x: 1455, y: 405, w: 165, h: 78, cat: "이유식·식품", isGemini: false, items: ["디카페인 커피", "유산균", "간식"], event: null },
+      { id: "A240", name: "튼튼영어", x: 1650, y: 405, w: 85, h: 78, cat: "가구·침구", isGemini: false, items: ["외국어교육", "영어전집"], event: null },
+      { id: "A245", name: "아이엔젤", x: 1740, y: 405, w: 80, h: 78, cat: "아기띠·턱받이", isGemini: false, items: ["아기띠", "힙시트"], event: null },
 
-      // 7. 내부 4행 (랜드마크 열)
-      { id: "D320", name: "크림하우스", x: 165, y: 585, w: 110, h: 105, cat: "가구·매트", isGemini: true, tip: "무가교 폼으로 쿠션 복원력이 우수한 매트.", items: ["프리 폴더매트", "롤매트", "매트"], event: null },
-      { id: "D220", name: "동양생명", x: 360, y: 585, w: 110, h: 105, cat: "임산부/육아 서비스", isGemini: false, items: ["태아보험", "어린이보험"], event: null },
-      { id: "D120", name: "VOLVO", x: 520, y: 585, w: 95, h: 105, cat: "홈/리빙", isGemini: false, items: ["패밀리카 상담"], event: null },
-      { id: "C130", name: "스완두", x: 890, y: 585, w: 80, h: 105, cat: "유모차·카시트", isGemini: true, tip: "유럽 ADAC 최상위 안전 인증 회전형 카시트 마리3.", items: ["회전형 카시트", "카시트", "주니어 카시트"], event: null },
-      { id: "B220", name: "주다안", x: 1285, y: 585, w: 55, h: 105, cat: "출산용품", isGemini: false, items: ["위생용품", "스킨케어"], event: { cond: "회원가입, 퀴즈, 뽑기", desc: "미니트래블 키트 증정" } },
-      { id: "B225", name: "더블하트", x: 1345, y: 585, w: 75, h: 105, cat: "출산·수유", isGemini: true, tip: "모유 혼합 수유 거부율이 가장 낮은 모유실감 젖꼭지.", items: ["모유실감 젖꼭지", "젖병", "세제"], event: null },
-      { id: "B120", name: "현대해상", x: 1455, y: 585, w: 115, h: 105, cat: "임산부/육아 서비스", isGemini: false, items: ["태아보험"], event: null },
-      { id: "A230", name: "베이비스탠다드", x: 1625, y: 585, w: 160, h: 105, cat: "출산용품", isGemini: false, items: ["목욕용품", "선물배포", "아기립밤"], event: { cond: "50명 인플친, 카플친, 회원가입, 뽑기 / 시간별 럭키 드로우", desc: "아기립밤, 타포린백 & 교환권 증정" } },
+      // 7. 내부 4행 (y: 505, h: 90)
+      { id: "D320", name: "크림하우스", x: 165, y: 505, w: 155, h: 90, cat: "가구·침구", isGemini: false, items: ["프리 폴더매트", "롤매트", "매트"], event: null },
+      { id: "D220", name: "동양생명", x: 365, y: 505, w: 155, h: 90, cat: "출산·수유", isGemini: false, items: ["태아보험", "어린이보험"], event: null },
+      { id: "D120", name: "VOLVO", x: 550, y: 505, w: 90, h: 90, cat: "가전·홈캠", isGemini: false, items: ["패밀리카 상담"], event: null },
+      { id: "C130", name: "스완두", x: 885, y: 505, w: 80, h: 90, cat: "유모차·카시트", isGemini: true, tip: "유럽 ADAC 최상위 안전 인증 회전형 카시트 마리3.", items: ["회전형 카시트", "카시트", "주니어 카시트"], event: null },
+      { id: "B220", name: "주다안", x: 1285, y: 505, w: 60, h: 90, cat: "출산·수유", isGemini: false, items: ["위생용품", "스킨케어"], event: { cond: "회원가입, 퀴즈, 뽑기", desc: "미니트래블 키트 증정" } },
+      { id: "B225", name: "더블하트", x: 1350, y: 505, w: 70, h: 90, cat: "출산·수유", isGemini: false, items: ["모유실감 젖꼭지", "젖병", "세제"], event: null },
+      { id: "B120", name: "현대해상", x: 1455, y: 505, w: 165, h: 90, cat: "출산·수유", isGemini: false, items: ["태아보험"], event: null },
+      { id: "A230", name: "베이비스탠다드/선물배포처", x: 1650, y: 505, w: 175, h: 90, cat: "출산·수유", isGemini: false, items: ["목욕용품", "선물배포", "아기립밤"], event: { cond: "50명 인플친, 카플친, 회원가입, 뽑기 / 시간별 럭키 드로우", desc: "아기립밤, 타포린백 & 교환권 증정" } },
 
-      // 8. 내부 5행 (유모차·카시트 메인스트리트)
-      { id: "D300", name: "순성", x: 160, y: 730, w: 105, h: 135, cat: "유모차·카시트", isGemini: true, tip: "국내 1위 자체 충돌 안전 카시트 전문 기업.", items: ["회전형 카시트", "카시트", "휴대용 유모차", "유모차"], event: null },
-      { id: "D200", name: "잉글레시나/시크", x: 285, y: 730, w: 145, h: 135, cat: "유모차·카시트", isGemini: true, tip: "한 손 원터치 매직 폴딩 이탈리아 유모차 명가.", items: ["일렉타 유모차", "유모차", "절충형유모차", "카시트"], event: null },
-      { id: "D100", name: "악스키드/님블", x: 450, y: 730, w: 130, h: 135, cat: "유모차·카시트", isGemini: false, items: ["카시트", "아기띠", "킥보드"], event: null },
-      { id: "C300", name: "퍼기/레드루트", x: 605, y: 730, w: 140, h: 135, cat: "출산·이유식", isGemini: true, tip: "열탕소독 가능한 실리콘 이유식 큐브와 식판.", items: ["이유식 큐브", "이유식", "천연세제", "젖병세제"], event: null },
-      { id: "C200", name: "뉴나/리안/조이", x: 770, y: 730, w: 180, h: 135, cat: "유모차·카시트", isGemini: true, tip: "가성비(리안)부터 럭셔리(뉴나)까지 동시 비교 부스.", items: ["뉴나 트리브", "유모차", "조이 스핀360", "카시트", "리안 유모차"], event: { cond: "선착순 스티커 찾기 / 11시,14시 타임챌린지 / 일100명 엽서,뽑기", desc: "뉴나 챌린지 선물 & 리안 뽑기 이벤트" } },
-      { id: "C100", name: "오이스터/맥시코시", x: 975, y: 730, w: 145, h: 135, cat: "유모차·카시트", isGemini: true, tip: "디럭스급 서스펜션과 컴팩트 폴딩의 완성형 오이스터3.", items: ["오이스터3 절충형 유모차", "유모차", "맥시코시 카시트", "카시트"], event: null },
-      { id: "B300", name: "실버크로스", x: 1145, y: 730, w: 130, h: 135, cat: "유모차·카시트", isGemini: false, items: ["영국 황실 디럭스 유모차", "유모차", "카시트"], event: null },
-      { id: "B200", name: "에그/아이카본", x: 1295, y: 730, w: 145, h: 135, cat: "유모차·카시트", isGemini: true, tip: "영국 프리미엄 명품 디럭스 유모차.", items: ["에그3 디럭스 유모차", "유모차", "카본 유모차"], event: null },
-      { id: "B100", name: "어파베이비", x: 1465, y: 730, w: 145, h: 135, cat: "유모차·카시트", isGemini: true, tip: "미국 1위 프리미엄 유모차. 거대한 장바구니 수납력.", items: ["크루즈 V2", "비스타 유모차", "유모차", "턱받이"], event: { cond: "뽑기이벤트 / 목요일만 턱받이 증정", desc: "턱받이(목요일) & 뽑기 이벤트" } },
-      { id: "A200", name: "에이블", x: 1640, y: 730, w: 105, h: 135, cat: "유모차·카시트", isGemini: false, items: ["트라이크", "푸쉬카", "유모차"], event: null }
+      // 8. 내부 5행 (유모차/카시트 메인스트리트 y: 640, h: 125)
+      { id: "D300", name: "순성", x: 165, y: 640, w: 90, h: 125, cat: "유모차·카시트", isGemini: true, tip: "국내 1위 자체 충돌 안전 카시트 전문 기업.", items: ["회전형 카시트", "카시트", "휴대용 유모차", "유모차"], event: null },
+      { id: "D200", name: "잉글레시나/시크", x: 275, y: 640, w: 125, h: 125, cat: "유모차·카시트", isGemini: true, tip: "한 손 원터치 매직 폴딩 이탈리아 유모차 명가.", items: ["일렉타 유모차", "유모차", "절충형유모차", "카시트"], event: null },
+      { id: "D100", name: "악스키드/님블", x: 425, y: 640, w: 125, h: 125, cat: "유모차·카시트", isGemini: false, items: ["카시트", "아기띠", "킥보드"], event: null },
+      { id: "C300", name: "퍼기/레드루트", x: 575, y: 640, w: 160, h: 125, cat: "이유식·식품", isGemini: true, tip: "열탕소독 가능한 실리콘 이유식 큐브와 식판.", items: ["이유식 큐브", "이유식", "천연세제", "젖병세제"], event: null },
+      { id: "C200", name: "뉴나/리안/조이", x: 775, y: 640, w: 155, h: 125, cat: "유모차·카시트", isGemini: true, tip: "가성비(리안)부터 럭셔리(뉴나)까지 동시 비교 부스.", items: ["뉴나 트리브", "유모차", "조이 스핀360", "카시트", "리안 유모차"], event: { cond: "선착순 스티커 찾기 / 11시,14시 타임챌린지 / 일100명 엽서,뽑기", desc: "뉴나 챌린지 선물 & 리안 뽑기 이벤트" } },
+      { id: "C100", name: "오이스터/맥시코시", x: 970, y: 640, w: 135, h: 125, cat: "유모차·카시트", isGemini: true, tip: "디럭스급 서스펜션과 컴팩트 폴딩의 완성형 오이스터3.", items: ["오이스터3 절충형 유모차", "유모차", "맥시코시 카시트", "카시트"], event: null },
+      { id: "B300", name: "실버크로스/제인", x: 1135, y: 640, w: 155, h: 125, cat: "유모차·카시트", isGemini: false, items: ["영국 황실 디럭스 유모차", "유모차", "카시트"], event: null },
+      { id: "B200", name: "에그/아이카본", x: 1320, y: 640, w: 160, h: 125, cat: "유모차·카시트", isGemini: true, tip: "영국 프리미엄 명품 디럭스 유모차.", items: ["에그3 디럭스 유모차", "유모차", "카본 유모차"], event: null },
+      { id: "B100", name: "어파베이비", x: 1520, y: 640, w: 155, h: 125, cat: "유모차·카시트", isGemini: true, tip: "미국 1위 프리미엄 유모차. 거대한 장바구니 수납력.", items: ["크루즈 V2", "비스타 유모차", "유모차", "턱받이"], event: { cond: "뽑기이벤트 / 목요일만 턱받이 증정", desc: "턱받이(목요일) & 뽑기 이벤트" } },
+      { id: "A200", name: "에이블", x: 1715, y: 640, w: 125, h: 125, cat: "유모차·카시트", isGemini: false, items: ["트라이크", "푸쉬카", "유모차"], event: null }
     ];
 
     let currentFilter = 'all';
@@ -374,12 +378,14 @@
 
     const FILTERS = [
       { id: 'all', label: '전체 부스', title: '🏢 전체 부스 리스트' },
-      { id: 'gemini', label: '✨ Gemini 추천', title: '✨ Gemini 추천 주요 브랜드 (SNS 검증템)' },
+      { id: 'gemini', label: '✨ Gemini 추천', title: '✨ Gemini 추천 필수 브랜드' },
       { id: 'event', label: '🎁 사은품 21선', title: '🎁 선착순 사은품 & 이벤트 부스' },
       { id: 'feed', label: '🍼 출산·수유', title: '🍼 출산·수유 위생용품' },
       { id: 'stroller', label: '🚼 유모차·카시트', title: '🚼 유모차 & 카시트 라인업' },
       { id: 'appliance', label: '🔌 가전·홈캠', title: '🔌 육아가전 & 스마트 홈캠' },
       { id: 'carrier', label: '🤱 아기띠·턱받이', title: '🤱 아기띠 & 턱받이' },
+      { id: 'furniture', label: '🛋️ 가구·침구', title: '🛋️ 침대, 가구 & 매트' },
+      { id: 'food', label: '🥣 이유식·식품', title: '🥣 이유식 & 건강식품' },
       { id: 'myList', label: '⭐ 내 체크리스트', title: '⭐ 내가 찜한 부스 & 동선' }
     ];
 
@@ -393,7 +399,6 @@
       fitMapToContainer();
     });
 
-    // 원본 도면 위 정밀 투명 클릭/하이라이트 타일 생성
     function renderBoothOverlay() {
       const container = document.getElementById('boothOverlayContainer');
       container.innerHTML = BOOTHS.map(b => `
@@ -459,10 +464,12 @@
         if (currentFilter === 'all') return true;
         if (currentFilter === 'gemini') return b.isGemini;
         if (currentFilter === 'event') return b.event !== null;
-        if (currentFilter === 'feed') return b.cat.includes('출산') || b.cat.includes('수유') || b.cat.includes('식품');
+        if (currentFilter === 'feed') return b.cat.includes('출산') || b.cat.includes('수유');
         if (currentFilter === 'stroller') return b.cat.includes('유모차') || b.cat.includes('카시트');
         if (currentFilter === 'appliance') return b.cat.includes('가전') || b.cat.includes('홈캠');
         if (currentFilter === 'carrier') return b.cat.includes('아기띠') || b.cat.includes('턱받이');
+        if (currentFilter === 'furniture') return b.cat.includes('가구') || b.cat.includes('침구');
+        if (currentFilter === 'food') return b.cat.includes('이유식') || b.cat.includes('식품');
         if (currentFilter === 'myList') return bookmarks.includes(b.id) || visited.includes(b.id);
         return true;
       });
@@ -569,7 +576,7 @@
 
       const centerX = b.x + b.w / 2;
       const centerY = b.y + b.h / 2;
-      focusOnCoordinate(centerX, centerY, 2.3);
+      focusOnCoordinate(centerX, centerY, 2.2);
 
       const resetBar = document.getElementById('focusedResetBar');
       if (resetBar) resetBar.classList.remove('hidden');
@@ -732,7 +739,7 @@
       }
     }
 
-    // 모바일 핀치 줌 & 팬 제스처 엔진
+    // 모바일 터치 제스처 엔진 (핀치 줌 & 1핑거 팬)
     const container = document.getElementById('viewportContainer');
     const transformGroup = document.getElementById('mapTransformGroup');
 
@@ -785,7 +792,7 @@
           const newDistance = getTouchDistance(e.touches);
           if (initialDistance > 0) {
             const factor = newDistance / initialDistance;
-            currentScale = Math.min(Math.max(initialScale * factor, 0.5), 4.5);
+            currentScale = Math.min(Math.max(initialScale * factor, 0.4), 4.5);
             updateTransform();
           }
         }
@@ -807,7 +814,7 @@
     }
 
     function zoomMap(factor) {
-      const nextScale = Math.min(Math.max(currentScale * factor, 0.5), 4.5);
+      const nextScale = Math.min(Math.max(currentScale * factor, 0.4), 4.5);
       const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
       panX = cx - (cx - panX) * (nextScale / currentScale);
       panY = cy - (cy - panY) * (nextScale / currentScale);
@@ -815,7 +822,7 @@
       updateTransform();
     }
 
-    function focusOnCoordinate(svgX, svgY, targetScale = 2.4) {
+    function focusOnCoordinate(svgX, svgY, targetScale = 2.2) {
       currentScale = targetScale;
       panX = (window.innerWidth / 2) - svgX * targetScale;
       panY = (window.innerHeight / 2) - svgY * targetScale;
